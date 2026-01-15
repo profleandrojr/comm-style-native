@@ -3,7 +3,6 @@ import React from "react";
 import {
   Dimensions,
   Image,
-  //   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,7 +19,6 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER IMAGE / ILLUSTRATION */}
       <View style={styles.headerContainer}>
         <Image
           source={require("../assets/images/icon.png")}
@@ -29,7 +27,6 @@ export default function WelcomeScreen() {
         />
       </View>
 
-      {/* TEXT CONTENT */}
       <View style={styles.contentContainer}>
         <Text style={styles.title}>Negotiation Style Profile</Text>
 
@@ -38,11 +35,11 @@ export default function WelcomeScreen() {
           5 minutes.
         </Text>
 
-        {/* START BUTTON */}
+        {/* LINKED UP! */}
         <TouchableOpacity
           style={styles.button}
           activeOpacity={0.8}
-          onPress={() => alert("Quiz Screen coming next!")}
+          onPress={() => router.push("/quiz")}
         >
           <Text style={styles.buttonText}>Start Assessment</Text>
         </TouchableOpacity>
@@ -54,13 +51,13 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background || "#FFFFFF", // Fallback if theme isn't loaded
+    backgroundColor: COLORS.background || "#FFFFFF",
   },
   headerContainer: {
-    flex: 0.55, // Takes top 55% of screen
+    flex: 0.55,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.secondary || "#F0F4F8", // Subtle background for image
+    backgroundColor: COLORS.secondary || "#F0F4F8",
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     overflow: "hidden",
@@ -70,13 +67,13 @@ const styles = StyleSheet.create({
     height: width * 0.8,
   },
   contentContainer: {
-    flex: 0.45, // Takes bottom 45%
+    flex: 0.45,
     padding: 30,
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
-    fontFamily: "RedHatDisplay", // <--- YOUR NEW FONT
+    fontFamily: "RedHatDisplay",
     fontSize: 32,
     fontWeight: "800",
     color: COLORS.text || "#1A1A1A",
@@ -102,7 +99,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 8, // Android shadow
+    elevation: 8,
   },
   buttonText: {
     fontFamily: "RedHatDisplay",
