@@ -16,8 +16,8 @@ export default function AboutScreen() {
 
   const handleLuisLink = () => {
     openSocialLink(
-      "linkedin://in/luisgeraldriffo",
-      "https://www.linkedin.com/in/luisgeraldriffo/"
+      "linkedin://in/luisriffo/",
+      "https://www.linkedin.com/in/luisriffo/"
     );
   };
 

@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   Image,
   ScrollView,
@@ -17,6 +18,7 @@ import { COLORS, SPACING } from "../constants/theme";
 import { openSocialLink } from "../utils/openLink";
 
 const { width } = Dimensions.get("window");
+const MAX_POSSIBLE_SCORE = 27 * 10; // 27 questions * max 10 points
 
 export default function ResultsScreen() {
   const router = useRouter();
@@ -24,13 +26,13 @@ export default function ResultsScreen() {
   const [result, setResult] = useState<string | null>(null);
   const [scores, setScores] = useState({ red: 0, blue: 0, green: 0 });
 
-  useEffect(() => {
-    setTimeout(() => {
-      calculateResults();
-    }, 1500);
-  }, []);
+  // Animations
+  const redAnim = useRef(new Animated.Value(0)).current;
+  const blueAnim = useRef(new Animated.Value(0)).current;
+  const greenAnim = useRef(new Animated.Value(0)).current;
 
-  const calculateResults = async () => {
+  // 1. Move calculation logic inside useCallback to fix dependency warning
+  const calculateResults = useCallback(async () => {
     try {
       const savedAns = await AsyncStorage.getItem("quizAnswers");
       if (!savedAns) {
@@ -61,12 +63,40 @@ export default function ResultsScreen() {
       } else {
         setResult(sorted[0].color);
       }
+
+      setLoading(false);
+
+      // Trigger Animations
+      Animated.parallel([
+        Animated.timing(redAnim, {
+          toValue: totals.red,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(blueAnim, {
+          toValue: totals.blue,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(greenAnim, {
+          toValue: totals.green,
+          duration: 1000,
+          useNativeDriver: false,
+        }),
+      ]).start();
     } catch (e) {
       console.error(e);
-    } finally {
       setLoading(false);
     }
-  };
+  }, [redAnim, blueAnim, greenAnim]);
+
+  useEffect(() => {
+    // 2. Small delay to ensure layout is ready before animating
+    const timer = setTimeout(() => {
+      calculateResults();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [calculateResults]);
 
   const handleRestart = async () => {
     await AsyncStorage.multiRemove(["quizAnswers", "quizCurrentQuestion"]);
@@ -75,8 +105,8 @@ export default function ResultsScreen() {
   };
 
   const handleShare = () => {
-    const content = RESULT_CONTENT[result!];
-    // TRANSLATED TWEET
+    if (!result) return;
+    const content = RESULT_CONTENT[result];
     const text = `¡Soy un Negociador ${content.title}! 🔴🔵🟢\n\nDescubre tu estilo con la App de Perfil de Comunicación de @profleandrojr.\n\nMetodología de Luis Gerald Riffo.`;
     const encodedText = encodeURIComponent(text);
 
@@ -138,34 +168,64 @@ export default function ResultsScreen() {
 
         <View style={styles.statsContainer}>
           <Text style={styles.statsTitle}>Tu Mezcla de Perfil</Text>
+
+          {/* Red Bar */}
           <View style={styles.barRow}>
             <Text style={styles.label}>Rojo</Text>
-            <View
-              style={[
-                styles.bar,
-                { width: scores.red * 2, backgroundColor: COLORS.red },
-              ]}
-            />
+            <View style={styles.barTrack}>
+              <Animated.View
+                style={[
+                  styles.bar,
+                  {
+                    backgroundColor: COLORS.red,
+                    width: redAnim.interpolate({
+                      inputRange: [0, MAX_POSSIBLE_SCORE],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
+                ]}
+              />
+            </View>
             <Text style={styles.score}>{scores.red}</Text>
           </View>
+
+          {/* Blue Bar */}
           <View style={styles.barRow}>
             <Text style={styles.label}>Azul</Text>
-            <View
-              style={[
-                styles.bar,
-                { width: scores.blue * 2, backgroundColor: COLORS.blue },
-              ]}
-            />
+            <View style={styles.barTrack}>
+              <Animated.View
+                style={[
+                  styles.bar,
+                  {
+                    backgroundColor: COLORS.blue,
+                    width: blueAnim.interpolate({
+                      inputRange: [0, MAX_POSSIBLE_SCORE],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
+                ]}
+              />
+            </View>
             <Text style={styles.score}>{scores.blue}</Text>
           </View>
+
+          {/* Green Bar */}
           <View style={styles.barRow}>
             <Text style={styles.label}>Verde</Text>
-            <View
-              style={[
-                styles.bar,
-                { width: scores.green * 2, backgroundColor: COLORS.green },
-              ]}
-            />
+            <View style={styles.barTrack}>
+              <Animated.View
+                style={[
+                  styles.bar,
+                  {
+                    backgroundColor: COLORS.green,
+                    width: greenAnim.interpolate({
+                      inputRange: [0, MAX_POSSIBLE_SCORE],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
+                ]}
+              />
+            </View>
             <Text style={styles.score}>{scores.green}</Text>
           </View>
         </View>
@@ -279,14 +339,31 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.m,
     color: COLORS.gray,
   },
+
+  // FIXED BAR STYLES
   barRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: SPACING.s,
+    marginBottom: SPACING.m,
+    width: "100%",
   },
   label: { width: 50, fontWeight: "600", color: COLORS.text },
-  bar: { height: 12, borderRadius: 6, marginHorizontal: 10 },
-  score: { fontWeight: "bold", color: COLORS.text },
+  barTrack: {
+    flex: 1,
+    height: 12,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 6,
+    marginHorizontal: 10,
+    overflow: "hidden",
+  },
+  bar: { height: "100%", borderRadius: 6 },
+  score: {
+    width: 30,
+    fontWeight: "bold",
+    color: COLORS.text,
+    textAlign: "right",
+  },
+
   footer: {
     position: "absolute",
     bottom: 0,
