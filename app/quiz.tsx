@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -7,9 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { QUESTIONS } from "../constants/questions";
 import { COLORS, SPACING } from "../constants/theme";
@@ -17,16 +16,28 @@ import { COLORS, SPACING } from "../constants/theme";
 const SCORES = [0, 3, 7, 10];
 const TOTAL_QUESTIONS = QUESTIONS.length;
 
+// Helper: Fisher-Yates Shuffle for true randomness
+const shuffleArray = (array: any[]) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 export default function QuizScreen() {
   const router = useRouter();
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Load saved progress
   useEffect(() => {
     loadProgress();
   }, []);
 
+  // Save progress on change
   useEffect(() => {
     if (!loading) saveProgress();
   }, [answers, currentQuestionIdx]);
@@ -55,6 +66,17 @@ export default function QuizScreen() {
     );
     await AsyncStorage.setItem("quizAnswers", JSON.stringify(answers));
   };
+
+  // --- RANDOMIZATION LOGIC START ---
+  const currentQData = QUESTIONS[currentQuestionIdx];
+
+  // We use useMemo so the order doesn't change while the user is answering THIS question.
+  // It only reshuffles when currentQuestionIdx changes.
+  const shuffledOptions = useMemo(() => {
+    if (!currentQData) return [];
+    return shuffleArray(currentQData.options);
+  }, [currentQuestionIdx]);
+  // --- RANDOMIZATION LOGIC END ---
 
   const handleScoreSelect = (color: string, score: number) => {
     const newAnswers = [...answers];
@@ -101,7 +123,6 @@ export default function QuizScreen() {
 
   if (loading) return <View style={styles.container} />;
 
-  const currentQData = QUESTIONS[currentQuestionIdx];
   const currentAnswer = answers[currentQuestionIdx] || {};
 
   return (
@@ -125,7 +146,8 @@ export default function QuizScreen() {
         <Text style={styles.questionText}>{currentQData?.text}</Text>
 
         <View style={styles.optionsContainer}>
-          {currentQData?.options.map((opt) => (
+          {/* Loop through the SHUFFLED options instead of the original ones */}
+          {shuffledOptions.map((opt) => (
             <View key={opt.color} style={styles.optionCard}>
               <Text style={styles.optionText}>{opt.text}</Text>
 
@@ -215,7 +237,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.l,
   },
   optionsContainer: { gap: SPACING.m },
-
   optionCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -228,7 +249,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-
   optionText: {
     fontSize: 16,
     fontFamily: "RedHatDisplay",
