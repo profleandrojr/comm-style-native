@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -16,7 +17,6 @@ import { COLORS, SPACING } from "../constants/theme";
 const SCORES = [0, 3, 7, 10];
 const TOTAL_QUESTIONS = QUESTIONS.length;
 
-// Helper: Fisher-Yates Shuffle for true randomness
 const shuffleArray = (array: any[]) => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -32,12 +32,9 @@ export default function QuizScreen() {
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load saved progress
   useEffect(() => {
     loadProgress();
   }, []);
-
-  // Save progress on change
   useEffect(() => {
     if (!loading) saveProgress();
   }, [answers, currentQuestionIdx]);
@@ -67,16 +64,33 @@ export default function QuizScreen() {
     await AsyncStorage.setItem("quizAnswers", JSON.stringify(answers));
   };
 
-  // --- RANDOMIZATION LOGIC START ---
-  const currentQData = QUESTIONS[currentQuestionIdx];
+  const handleQuit = () => {
+    Alert.alert(
+      "¿Salir de la Evaluación?",
+      "Tu progreso se guardará, pero también puedes elegir reiniciar.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Reiniciar",
+          style: "destructive",
+          onPress: async () => {
+            await AsyncStorage.multiRemove([
+              "quizAnswers",
+              "quizCurrentQuestion",
+            ]);
+            router.replace("/");
+          },
+        },
+        { text: "Guardar y Salir", onPress: () => router.replace("/") },
+      ]
+    );
+  };
 
-  // We use useMemo so the order doesn't change while the user is answering THIS question.
-  // It only reshuffles when currentQuestionIdx changes.
+  const currentQData = QUESTIONS[currentQuestionIdx];
   const shuffledOptions = useMemo(() => {
     if (!currentQData) return [];
     return shuffleArray(currentQData.options);
   }, [currentQuestionIdx]);
-  // --- RANDOMIZATION LOGIC END ---
 
   const handleScoreSelect = (color: string, score: number) => {
     const newAnswers = [...answers];
@@ -115,8 +129,8 @@ export default function QuizScreen() {
       }
     } else {
       Alert.alert(
-        "Action Required",
-        "Please assign unique scores (0, 3, 7, 10) to all options."
+        "Acción Requerida",
+        "Por favor asigna puntajes únicos (0, 3, 7, 10) a todas las opciones."
       );
     }
   };
@@ -127,30 +141,35 @@ export default function QuizScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      {/* Progress Bar */}
       <View style={styles.header}>
-        <View style={styles.progressBarBg}>
-          <View
-            style={[
-              styles.progressBarFill,
-              {
-                width: `${((currentQuestionIdx + 1) / TOTAL_QUESTIONS) * 100}%`,
-              },
-            ]}
-          />
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressLabel}>
+            Pregunta {currentQuestionIdx + 1} de {TOTAL_QUESTIONS}
+          </Text>
+          <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${
+                    ((currentQuestionIdx + 1) / TOTAL_QUESTIONS) * 100
+                  }%`,
+                },
+              ]}
+            />
+          </View>
         </View>
-        <Text style={styles.progressText}>Q{currentQuestionIdx + 1}</Text>
+        <TouchableOpacity onPress={handleQuit} style={styles.closeButton}>
+          <Ionicons name="close-circle-outline" size={28} color={COLORS.gray} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.questionText}>{currentQData?.text}</Text>
-
         <View style={styles.optionsContainer}>
-          {/* Loop through the SHUFFLED options instead of the original ones */}
           {shuffledOptions.map((opt) => (
             <View key={opt.color} style={styles.optionCard}>
               <Text style={styles.optionText}>{opt.text}</Text>
-
               <View style={styles.scoreRow}>
                 {SCORES.map((score) => {
                   const isSelected = currentAnswer[opt.color] === score;
@@ -199,8 +218,8 @@ export default function QuizScreen() {
         >
           <Text style={styles.nextButtonText}>
             {currentQuestionIdx === TOTAL_QUESTIONS - 1
-              ? "FINISH"
-              : "NEXT QUESTION"}
+              ? "FINALIZAR"
+              : "SIGUIENTE PREGUNTA"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -214,20 +233,28 @@ const styles = StyleSheet.create({
     padding: SPACING.m,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  progressContainer: { flex: 1, marginRight: SPACING.m },
+  progressLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 6,
+    fontWeight: "600",
   },
   progressBarBg: {
-    flex: 1,
-    height: 8,
+    height: 6,
     backgroundColor: COLORS.lightGray,
-    borderRadius: 4,
+    borderRadius: 3,
   },
   progressBarFill: {
     height: "100%",
     backgroundColor: COLORS.accent,
-    borderRadius: 4,
+    borderRadius: 3,
   },
-  progressText: { fontWeight: "bold", color: COLORS.gray },
+  closeButton: { padding: 4 },
   scrollContent: { padding: SPACING.m, paddingBottom: 100 },
   questionText: {
     fontSize: 20,

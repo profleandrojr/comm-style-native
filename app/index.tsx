@@ -9,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { COLORS } from "../constants/theme";
 
 const { width } = Dimensions.get("window");
@@ -28,20 +27,26 @@ export default function WelcomeScreen() {
       </View>
 
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Negotiation Style Profile</Text>
+        <Text style={styles.title}>Perfil de Estilo de Negociación</Text>
 
         <Text style={styles.subtitle}>
-          Are you Hierarchical, Visionary, or Pragmatic? Discover your style in
-          5 minutes.
+          ¿Eres Jerárquico, Visionario o Pragmático? Descubre tu estilo en 5
+          minutos.
         </Text>
 
-        {/* LINKED UP! */}
         <TouchableOpacity
           style={styles.button}
           activeOpacity={0.8}
           onPress={() => router.push("/quiz")}
         >
-          <Text style={styles.buttonText}>Start Assessment</Text>
+          <Text style={styles.buttonText}>Iniciar Evaluación</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.aboutLink}
+          onPress={() => router.push("/about")}
+        >
+          <Text style={styles.aboutLinkText}>Acerca de y Créditos</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -49,10 +54,7 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background || "#FFFFFF",
-  },
+  container: { flex: 1, backgroundColor: COLORS.background || "#FFFFFF" },
   headerContainer: {
     flex: 0.55,
     justifyContent: "center",
@@ -62,10 +64,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
     overflow: "hidden",
   },
-  heroImage: {
-    width: width * 0.8,
-    height: width * 0.8,
-  },
+  heroImage: { width: width * 0.8, height: width * 0.8 },
   contentContainer: {
     flex: 0.45,
     padding: 30,
@@ -107,5 +106,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  aboutLink: { marginTop: 20, padding: 10 },
+  aboutLinkText: {
+    color: COLORS.gray,
+    fontSize: 14,
+    fontFamily: "RedHatDisplay",
+    textDecorationLine: "underline",
   },
 });

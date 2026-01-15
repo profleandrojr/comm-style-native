@@ -1,4 +1,4 @@
-// Static Image Mapping (Crucial for React Native)
+// Static Image Mapping
 export const RESULT_IMAGES: Record<string, any> = {
   red: require("../assets/images/red.png"),
   blue: require("../assets/images/blue.png"),
@@ -6,34 +6,34 @@ export const RESULT_IMAGES: Record<string, any> = {
   rainbow: require("../assets/images/rainbow.png"),
 };
 
-// The Content Logic
+// The Content Logic (Now in Spanish 🇪🇸)
 export const RESULT_CONTENT: Record<string, any> = {
   red: {
-    title: "Hierarchical (Red)",
+    title: "Jerárquico (Rojo)",
     description:
-      "You focus on action, results, and speed. You are direct and value efficiency above all else.",
+      "Te enfocas en la acción, los resultados y la velocidad. Eres directo y valoras la eficiencia por encima de todo[cite: 133].",
     advice:
-      "Practice patience. Sometimes building the relationship (Blue) or analyzing the details (Green) can lead to a better long-term deal than just a quick win.",
+      "Neurotip: Practica la paciencia. A veces, construir la relación (Azul) o analizar los detalles (Verde) puede llevar a un mejor trato a largo plazo que solo buscar una victoria rápida.",
   },
   blue: {
-    title: "Visionary (Blue)",
+    title: "Visionario (Azul)",
     description:
-      "You focus on people, relationships, and the 'big picture'. Harmony is your priority.",
+      "Te enfocas en la gente, las relaciones y el 'panorama general'. [cite_start]La armonía y el trabajo en equipo son tu prioridad[cite: 133].",
     advice:
-      "Don't be afraid of conflict. Ensure you aren't sacrificing your own interests just to keep everyone happy. Use data (Green) to back up your feelings.",
+      "Neurotip: No temas al conflicto productivo. Asegúrate de no sacrificar tus intereses solo por mantener a todos felices. Usa datos (Verde) para respaldar tus sentimientos.",
   },
   green: {
-    title: "Pragmatic (Green)",
+    title: "Pragmático (Verde)",
     description:
-      "You focus on ideas, processes, and analysis. You value logic, data, and accuracy.",
+      "Te enfocas en las ideas, los procesos y el análisis. [cite_start]Valoras la lógica, los datos exactos y la planificación detallada[cite: 133].",
     advice:
-      "Watch out for 'Analysis Paralysis'. At some point, you need to stop calculating and start acting (Red). Connect with the human side (Blue) of the deal.",
+      "Neurotip: Cuidado con la 'Parálisis por Análisis'. En algún momento, necesitas dejar de calcular y empezar a actuar (Rojo). Conecta con el lado humano (Azul) del trato.",
   },
   rainbow: {
-    title: "Situational (Rainbow)",
+    title: "Situacional (Arcoíris)",
     description:
-      "You are a chameleon! You adapt your style based on the situation.",
+      "¡Eres un camaleón! Tu estilo se adapta según la situación o el entorno. [cite_start]Tienes un equilibrio entre los tres colores[cite: 133].",
     advice:
-      "This is a superpower, but be careful not to seem inconsistent. Make sure your core values remain clear regardless of which 'hat' you are wearing.",
+      "Neurotip: Esta es una gran habilidad, pero cuidado con parecer inconsistente. Asegúrate de que tus valores centrales sean claros, sin importar qué 'sombrero' lleves puesto hoy.",
   },
 };

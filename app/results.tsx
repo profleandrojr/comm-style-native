@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RESULT_CONTENT, RESULT_IMAGES } from "../constants/results";
 import { COLORS, SPACING } from "../constants/theme";
+import { openSocialLink } from "../utils/openLink";
 
 const { width } = Dimensions.get("window");
 
@@ -24,22 +25,21 @@ export default function ResultsScreen() {
   const [scores, setScores] = useState({ red: 0, blue: 0, green: 0 });
 
   useEffect(() => {
-    calculateResults();
+    setTimeout(() => {
+      calculateResults();
+    }, 1500);
   }, []);
 
   const calculateResults = async () => {
     try {
       const savedAns = await AsyncStorage.getItem("quizAnswers");
       if (!savedAns) {
-        // Fallback if no data (shouldn't happen)
         setResult("rainbow");
         setLoading(false);
         return;
       }
-
       const answers = JSON.parse(savedAns);
 
-      // Calculate Totals
       const totals = answers.reduce(
         (acc: any, ans: any) => ({
           red: acc.red + (ans.red || 0),
@@ -48,17 +48,14 @@ export default function ResultsScreen() {
         }),
         { red: 0, blue: 0, green: 0 }
       );
-
       setScores(totals);
 
-      // Determine Winner Logic
       const sorted = [
         { color: "red", score: totals.red },
         { color: "blue", score: totals.blue },
         { color: "green", score: totals.green },
       ].sort((a, b) => b.score - a.score);
 
-      // Tie Logic (Rainbow)
       if (sorted[0].score === sorted[1].score) {
         setResult("rainbow");
       } else {
@@ -72,16 +69,28 @@ export default function ResultsScreen() {
   };
 
   const handleRestart = async () => {
-    // Clear data so they start fresh
     await AsyncStorage.multiRemove(["quizAnswers", "quizCurrentQuestion"]);
-    router.dismissAll(); // Clear stack
-    router.replace("/"); // Go to Welcome
+    router.dismissAll();
+    router.replace("/");
+  };
+
+  const handleShare = () => {
+    const content = RESULT_CONTENT[result!];
+    // TRANSLATED TWEET
+    const text = `¡Soy un Negociador ${content.title}! 🔴🔵🟢\n\nDescubre tu estilo con la App de Perfil de Comunicación de @profleandrojr.\n\nMetodología de Luis Gerald Riffo.`;
+    const encodedText = encodeURIComponent(text);
+
+    openSocialLink(
+      `twitter://post?message=${encodedText}`,
+      `https://twitter.com/intent/tweet?text=${encodedText}`
+    );
   };
 
   if (loading || !result) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Analizando tu perfil...</Text>
       </View>
     );
   }
@@ -92,8 +101,7 @@ export default function ResultsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Result Header */}
-        <Text style={styles.headerTitle}>Your Style Is...</Text>
+        <Text style={styles.headerTitle}>Tu Estilo Es...</Text>
 
         <View style={styles.imageContainer}>
           <Image
@@ -103,7 +111,6 @@ export default function ResultsScreen() {
           />
         </View>
 
-        {/* Result Card */}
         <View style={styles.card}>
           <Text
             style={[
@@ -117,18 +124,22 @@ export default function ResultsScreen() {
           </Text>
           <Text style={styles.resultDesc}>{content.description}</Text>
 
-          {/* Pro Tip Section */}
           <View style={styles.tipBox}>
-            <Text style={styles.tipTitle}>💡 Neuromarketing Tip:</Text>
+            <Text style={styles.tipTitle}>💡 Neurotip:</Text>
             <Text style={styles.tipText}>{content.advice}</Text>
           </View>
         </View>
 
-        {/* Score Breakdown (Optional, but users love data) */}
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <Text style={styles.shareButtonText}>
+            Publicar Resultado en X (Twitter)
+          </Text>
+        </TouchableOpacity>
+
         <View style={styles.statsContainer}>
-          <Text style={styles.statsTitle}>Your Profile Mix</Text>
+          <Text style={styles.statsTitle}>Tu Mezcla de Perfil</Text>
           <View style={styles.barRow}>
-            <Text style={styles.label}>Red</Text>
+            <Text style={styles.label}>Rojo</Text>
             <View
               style={[
                 styles.bar,
@@ -138,7 +149,7 @@ export default function ResultsScreen() {
             <Text style={styles.score}>{scores.red}</Text>
           </View>
           <View style={styles.barRow}>
-            <Text style={styles.label}>Blue</Text>
+            <Text style={styles.label}>Azul</Text>
             <View
               style={[
                 styles.bar,
@@ -148,7 +159,7 @@ export default function ResultsScreen() {
             <Text style={styles.score}>{scores.blue}</Text>
           </View>
           <View style={styles.barRow}>
-            <Text style={styles.label}>Green</Text>
+            <Text style={styles.label}>Verde</Text>
             <View
               style={[
                 styles.bar,
@@ -160,10 +171,9 @@ export default function ResultsScreen() {
         </View>
       </ScrollView>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.restartButton} onPress={handleRestart}>
-          <Text style={styles.restartText}>Retake Assessment</Text>
+          <Text style={styles.restartText}>Repetir Evaluación</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -172,7 +182,18 @@ export default function ResultsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    fontFamily: "RedHatDisplay",
+    color: COLORS.gray,
+  },
   scrollContent: {
     padding: SPACING.m,
     paddingBottom: 100,
@@ -185,14 +206,12 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginTop: SPACING.m,
   },
-
   imageContainer: {
     marginVertical: SPACING.l,
     alignItems: "center",
     justifyContent: "center",
   },
   resultImage: { width: width * 0.6, height: width * 0.6 },
-
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -219,7 +238,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: SPACING.l,
   },
-
   tipBox: {
     backgroundColor: COLORS.secondary,
     padding: SPACING.m,
@@ -234,7 +252,26 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     lineHeight: 20,
   },
-
+  shareButton: {
+    marginTop: SPACING.l,
+    backgroundColor: "#000000",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  shareButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
+    fontFamily: "RedHatDisplay",
+  },
   statsContainer: { marginTop: SPACING.xl, width: "100%" },
   statsTitle: {
     fontSize: 18,
@@ -250,7 +287,6 @@ const styles = StyleSheet.create({
   label: { width: 50, fontWeight: "600", color: COLORS.text },
   bar: { height: 12, borderRadius: 6, marginHorizontal: 10 },
   score: { fontWeight: "bold", color: COLORS.text },
-
   footer: {
     position: "absolute",
     bottom: 0,
